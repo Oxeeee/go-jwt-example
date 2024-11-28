@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -58,8 +59,10 @@ func ValidateAccessToken(tokenStr string) (*Claims, error) {
 		return jwtKey, nil
 	})
 	if err != nil || !token.Valid {
+		log.Printf("Invalid access token: %v", err)
 		return nil, errors.New("invalid access token")
 	}
+	log.Printf("Access token is valid: %s", tokenStr)
 	return claims, nil
 }
 

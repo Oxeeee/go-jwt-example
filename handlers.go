@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -30,22 +31,29 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Login attempt: Username: %s, Password: %s", creds.Username, creds.Password)
+
 	if userDB[creds.Username] != creds.Password {
+		log.Printf("Invalid credentials for username: %s", creds.Username)
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
 
 	accessToken, err := GenerateAccessToken(creds.Username)
 	if err != nil {
+		log.Printf("Error generating access token: %v", err)
 		http.Error(w, "Failed to generate access token", http.StatusInternalServerError)
 		return
 	}
 
 	refreshToken, err := GenerateRefreshToken(creds.Username)
 	if err != nil {
+		log.Printf("Error generating refresh token: %v", err)
 		http.Error(w, "Failed to generate refresh token", http.StatusInternalServerError)
 		return
 	}
+
+	log.Printf("Access and refresh tokens generated for user: %s", creds.Username)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
@@ -103,6 +111,13 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 // The handler expects a username to be present in the request context, and
 // returns a 500 error if it is not.
 func ProtectedHandler(w http.ResponseWriter, r *http.Request) {
-	username := r.Context().Value("username").(string)
+	log.Printf("Context: %v", r.Context())
+	username, ok := r.Context().Value(usernameKey).(string)
+	if !ok {
+		log.Printf("Error: 'username' not found in context or is not a string")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	log.Printf("User authenticated: %s", username)
 	w.Write([]byte("Hello, " + username + "! This is a protected route."))
 }
