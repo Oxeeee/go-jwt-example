@@ -8,7 +8,7 @@ import (
 
 type contextKey string
 
-const usernameKey = "username"
+const usernameKey contextKey = "username"
 
 // AuthMiddleware is an HTTP middleware that requires an access token cookie
 // to be present in the request.  If the cookie is not present or is invalid,
